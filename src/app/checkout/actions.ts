@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { UserRole } from "@prisma/client";
+import { UserRole, OrderStatus } from "@prisma/client";
 
 const cartLineSchema = z.object({
   productId: z.string().min(1),
@@ -121,6 +121,7 @@ export async function submitOrder(
         companyId: company.id,
         branchId: branch.id,
         createdById: user.id,
+        status: OrderStatus.SUBMITTED,
         requestedDate: new Date(data.requestedDate),
         notes: data.notes || undefined,
         subtotal,
