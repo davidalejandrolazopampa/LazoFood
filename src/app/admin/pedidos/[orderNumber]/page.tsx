@@ -1,16 +1,9 @@
 import { Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
-
-const unitLabel: Record<string, string> = {
-  KG: "kg",
-  UNIT: "und",
-  CRATE: "jaba",
-  SACK: "saco",
-};
+import { DeliveryWeightsForm } from "@/components/admin/delivery-weights-form";
 
 async function OrderDetail({ params }: { params: Promise<{ orderNumber: string }> }) {
   const { orderNumber } = await params;
@@ -85,38 +78,30 @@ async function OrderDetail({ params }: { params: Promise<{ orderNumber: string }
       </div>
 
       <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-        <h2 className="font-semibold text-foreground">Productos</h2>
-        <div className="mt-4 divide-y divide-black/5">
-          {order.items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-4 py-3">
-              <div className="flex items-center gap-3">
-                {item.product.imageUrl && (
-                  <Image
-                    src={item.product.imageUrl}
-                    alt={item.product.name}
-                    width={40}
-                    height={40}
-                    className="rounded-lg bg-[#f2efe4]"
-                  />
-                )}
-                <div>
-                  <p className="text-sm font-medium text-foreground">{item.product.name}</p>
-                  <p className="text-xs text-foreground/50">
-                    Pedido: {Number(item.quantityOrdered)}{" "}
-                    {unitLabel[item.product.unit] ?? item.product.unit.toLowerCase()}
-                    {item.quantityDelivered !== null &&
-                      ` · Entregado: ${Number(item.quantityDelivered)}`}
-                  </p>
-                </div>
-              </div>
-              <p className="text-sm font-semibold text-foreground">
-                S/ {(Number(item.quantityOrdered) * Number(item.unitPriceApplied)).toFixed(2)}
-              </p>
-            </div>
-          ))}
+        <h2 className="font-semibold text-foreground">Peso / cantidad real al despacho</h2>
+        <p className="mt-1 text-xs text-foreground/50">
+          El producto se pesa recién al empacar — el subtotal se calcula
+          sobre lo entregado, no sobre lo pedido.
+        </p>
+        <div className="mt-4">
+          <DeliveryWeightsForm
+            orderNumber={order.orderNumber}
+            items={order.items.map((item) => ({
+              id: item.id,
+              quantityOrdered: Number(item.quantityOrdered),
+              quantityDelivered:
+                item.quantityDelivered !== null ? Number(item.quantityDelivered) : null,
+              unitPriceApplied: Number(item.unitPriceApplied),
+              product: {
+                name: item.product.name,
+                unit: item.product.unit,
+                imageUrl: item.product.imageUrl,
+              },
+            }))}
+          />
         </div>
         <div className="mt-4 flex items-center justify-between border-t border-black/5 pt-4">
-          <span className="font-semibold text-foreground/80">Subtotal estimado</span>
+          <span className="font-semibold text-foreground/80">Subtotal</span>
           <span className="text-xl font-bold text-brand-tomato">
             S/ {Number(order.subtotal).toFixed(2)}
           </span>

@@ -78,21 +78,38 @@ async function PedidoDetail({
         </p>
 
         <div className="mt-5 divide-y divide-black/5 border-t border-black/5">
-          {order.items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between py-3 text-sm"
-            >
-              <span className="text-foreground/80">
-                {item.product.name} — {Number(item.quantityOrdered)}{" "}
-                {unitLabel[item.product.unit] ?? item.product.unit.toLowerCase()}
-              </span>
-              <span className="font-semibold text-foreground">
-                S/{" "}
-                {(Number(item.quantityOrdered) * Number(item.unitPriceApplied)).toFixed(2)}
-              </span>
-            </div>
-          ))}
+          {order.items.map((item) => {
+            const delivered =
+              item.quantityDelivered !== null ? Number(item.quantityDelivered) : null;
+            const ordered = Number(item.quantityOrdered);
+            const unit = unitLabel[item.product.unit] ?? item.product.unit.toLowerCase();
+            const lineTotal = (delivered ?? ordered) * Number(item.unitPriceApplied);
+            return (
+              <div
+                key={item.id}
+                className="flex items-center justify-between py-3 text-sm"
+              >
+                <span className="text-foreground/80">
+                  {item.product.name} —{" "}
+                  {delivered !== null ? (
+                    <>
+                      {delivered} {unit}{" "}
+                      <span className="text-foreground/40">
+                        (pedido: {ordered} {unit})
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {ordered} {unit}
+                    </>
+                  )}
+                </span>
+                <span className="font-semibold text-foreground">
+                  S/ {lineTotal.toFixed(2)}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="mt-4 flex items-center justify-between border-t border-black/5 pt-4">
