@@ -1,9 +1,15 @@
 // Datos de ejemplo para desarrollo local.
 // Ejecutar con: npm run db:seed
 import { PrismaClient, UserRole, UnitOfMeasure } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import { PRODUCTS, type ProduceCategory } from "./data/products";
 
 const prisma = new PrismaClient();
+
+// Cuenta de demo para probar /admin. Login básico de desarrollo, no apto
+// para producción (ver nota en src/app/admin/layout.tsx).
+const DEMO_EMAIL = "demo@lazofood.pe";
+const DEMO_PASSWORD = "demo1234";
 
 const CATEGORY_LABEL: Record<ProduceCategory, string> = {
   verduras: "Verduras",
@@ -101,17 +107,21 @@ async function main() {
     },
   });
 
+  const demoPasswordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
   await prisma.user.upsert({
     where: { phone: "+51999000000" },
-    update: {},
+    update: { email: DEMO_EMAIL, passwordHash: demoPasswordHash, name: "Admin Demo" },
     create: {
       phone: "+51999000000",
-      name: "Admin LazoFood",
+      email: DEMO_EMAIL,
+      passwordHash: demoPasswordHash,
+      name: "Admin Demo",
       role: UserRole.ADMIN,
     },
   });
 
   console.log("Seed completo:", { company: company.tradeName, owner: owner.name });
+  console.log(`Login de prueba: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
 }
 
 main()

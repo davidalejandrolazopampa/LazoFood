@@ -1,7 +1,20 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { getUserByToken, SESSION_COOKIE } from "@/lib/auth";
+import { logout } from "./logout-action";
 
-export default function AdminLayout({ children }: LayoutProps<"/admin">) {
+// Todo /admin depende de la cookie de sesión en cada request (gate de
+// login) — no tiene sentido pre-renderizarlo estáticamente.
+export const instant = false;
+
+export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
+  const cookieStore = await cookies();
+  const user = await getUserByToken(cookieStore.get(SESSION_COOKIE)?.value);
+
+  if (!user) redirect("/login");
+
   return (
     <div className="flex flex-1 flex-col bg-[#f4f3ee]">
       <header className="border-b border-black/10 bg-white">
@@ -19,15 +32,26 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
               </Link>
             </nav>
           </div>
-          <Link href="/" className="text-sm text-foreground/50 hover:text-brand-sage">
-            ← Volver al sitio
-          </Link>
+          <div className="flex items-center gap-4 text-sm">
+            <span className="text-foreground/60">
+              {user.name} <span className="text-foreground/40">({user.email})</span>
+            </span>
+            <form action={logout}>
+              <button type="submit" className="text-foreground/50 hover:text-brand-tomato">
+                Salir
+              </button>
+            </form>
+            <Link href="/" className="text-foreground/50 hover:text-brand-sage">
+              ← Sitio
+            </Link>
+          </div>
         </div>
       </header>
 
       <div className="border-b border-amber-200 bg-amber-50 px-6 py-2 text-center text-xs text-amber-800">
-        Panel interno sin autenticación todavía — solo para desarrollo. Antes
-        de operar con clientes reales necesita login y control de rol.
+        Acceso con cuenta de demo — login básico sin recuperación de
+        contraseña ni verificación de correo. No usar todavía con datos de
+        clientes reales.
       </div>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">{children}</main>
