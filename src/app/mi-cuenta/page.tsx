@@ -7,6 +7,7 @@ import { AddBranchForm } from "@/components/cuenta/add-branch-form";
 import { prisma } from "@/lib/prisma";
 import { getCurrentCustomer } from "@/lib/customer-session";
 import { STATUS_LABEL } from "@/lib/order-status";
+import { formatCalendarDate } from "@/lib/dates";
 import { customerLogout } from "./actions";
 
 export const metadata: Metadata = { title: "Mi cuenta | LazoFood" };
@@ -124,7 +125,7 @@ async function AccountContent({
                         </Link>
                       </td>
                       <td className="py-2 pr-4">{o.branch.name}</td>
-                      <td className="py-2 pr-4">{o.requestedDate.toISOString().slice(0, 10)}</td>
+                      <td className="py-2 pr-4">{formatCalendarDate(o.requestedDate, { day: "2-digit", month: "short" })}</td>
                       <td className="py-2 pr-4">
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status?.className}`}>
                           {status?.label ?? o.status}

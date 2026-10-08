@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { ClearCartOnMount } from "@/components/cart/clear-cart-on-mount";
 import { prisma } from "@/lib/prisma";
+import { formatCalendarDate } from "@/lib/dates";
 
 const unitLabel: Record<string, string> = {
   KG: "kg",
@@ -70,11 +71,7 @@ async function PedidoDetail({
         </p>
         <p className="mt-1 text-sm text-foreground/60">
           Entrega solicitada:{" "}
-          {order.requestedDate.toLocaleDateString("es-PE", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          })}
+          {formatCalendarDate(order.requestedDate)}
         </p>
 
         <div className="mt-5 divide-y divide-black/5 border-t border-black/5">

@@ -19,14 +19,17 @@ export type CheckoutCustomer = {
 };
 
 export function CheckoutForm({ customer }: { customer: CheckoutCustomer | null }) {
-  const { lines, subtotal } = useCart();
+  const { lines, subtotal, ready } = useCart();
   const router = useRouter();
   const [state, formAction, pending] = useActionState(submitOrder, initialState);
 
   useEffect(() => {
-    if (lines.length === 0) router.replace("/carrito");
-  }, [lines.length, router]);
+    if (ready && lines.length === 0) router.replace("/carrito");
+  }, [ready, lines.length, router]);
 
+  if (!ready) {
+    return <div className="h-96 animate-pulse rounded-2xl bg-white ring-1 ring-black/5" />;
+  }
   if (lines.length === 0) return null;
 
   const err = state.fieldErrors ?? {};

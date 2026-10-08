@@ -11,6 +11,37 @@ restaurantes. No es una tienda al consumidor final: el comprador es una
 empresa, con precios negociados, crédito a 15/30 días, y entrega por rutas
 y ventanas horarias.
 
+## Lo más destacado
+
+- **Precio del día con historial** (append-only) y **listas negociadas por
+  empresa**: precio fijo o % de descuento sobre el precio del día.
+- **Se cobra lo entregado, no lo pedido**: almacén registra el peso real y
+  el subtotal se recalcula.
+- **Cuentas de empresa** con varias sedes de entrega, login único con
+  roles y panel interno protegido, también a nivel de Server Actions.
+- **Next.js 16** con Server Components, Server Actions y Partial
+  Prerendering; Prisma + PostgreSQL; 26 tests, incluidos tests de
+  integración contra la base real.
+
+📄 **[Informe técnico: arquitectura, modelo de datos, decisiones y límites](docs/ARQUITECTURA.md)**
+
+## Capturas
+
+| | |
+|---|---|
+| ![Inicio](docs/screenshots/01-inicio.png) **Inicio** | ![Catálogo](docs/screenshots/02-catalogo.png) **Catálogo con precio del día** |
+| ![Precios negociados](docs/screenshots/05-catalogo-precios-negociados.png) **Cliente con sesión: su lista negociada** (Limón S/ 3.50 → S/ 3.20) | ![Móvil](docs/screenshots/02b-catalogo-movil.png) **Vista móvil** |
+| ![Carrito](docs/screenshots/06-carrito.png) **Carrito** | ![Checkout](docs/screenshots/07-checkout-cliente.png) **Checkout con sesión: solo elige sede y fecha** |
+| ![Pedido](docs/screenshots/08-pedido-confirmado.png) **Pedido recibido** | ![Mi cuenta](docs/screenshots/09-mi-cuenta.png) **Mi cuenta: pedidos, crédito y sedes** |
+| ![Registro](docs/screenshots/03-registro.png) **Registro de empresa** | ![Login](docs/screenshots/04-login.png) **Login único** |
+
+**Panel interno**
+
+| | |
+|---|---|
+| ![Precio del día](docs/screenshots/10-admin-precio-del-dia.png) **Carga del precio del día** | ![Pedidos](docs/screenshots/11-admin-pedidos.png) **Pedidos** |
+| ![Pesaje](docs/screenshots/12-admin-pedido-pesaje.png) **Peso real al despacho**: 257.20 pedidos → 254.62 entregados | ![Lista negociada](docs/screenshots/14-admin-lista-negociada.png) **Lista negociada por cliente** |
+
 ## Stack
 
 - **Next.js 16** (App Router, React Server Components, Turbopack)
@@ -128,7 +159,7 @@ También se puede crear una empresa nueva en `/registro`. Cualquier RUC de
 ## Tests
 
 `src/**/*.test.ts` son tests unitarios de lógica pura (resolución de
-precios, hashing de contraseñas) — no tocan la base de datos.
+precios, hashing de contraseñas, formato de fechas) — no tocan la base de datos.
 
 `tests/integration/*.test.ts` sí pegan contra la base de datos real de
 `DATABASE_URL` (la misma que usa `npm run dev`), porque son el tipo de

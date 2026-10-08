@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { formatCalendarDate } from "@/lib/dates";
 import { STATUS_LABEL } from "@/lib/order-status";
 
 export const metadata: Metadata = { title: "Pedidos | Admin LazoFood" };
@@ -52,10 +53,7 @@ async function OrdersTable() {
                   <p className="text-xs text-foreground/50">{order.branch.name}</p>
                 </td>
                 <td className="p-4 text-foreground/70">
-                  {order.requestedDate.toLocaleDateString("es-PE", {
-                    day: "2-digit",
-                    month: "short",
-                  })}
+                  {formatCalendarDate(order.requestedDate, { day: "2-digit", month: "short" })}
                 </td>
                 <td className="p-4 font-semibold text-foreground">
                   S/ {Number(order.subtotal).toFixed(2)}

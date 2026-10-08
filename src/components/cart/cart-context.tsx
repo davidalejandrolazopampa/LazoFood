@@ -93,14 +93,22 @@ function clear() {
   setLines(EMPTY_LINES);
 }
 
+const noopSubscribe = () => () => {};
+
 export function useCart() {
   const currentLines = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  // false durante SSR e hidratación (cuando lines todavía es el array vacío
+  // del servidor), true desde el primer render con el carrito real. Sin
+  // esto, una página que reacciona a "carrito vacío" (checkout) no puede
+  // distinguir "vacío de verdad" de "aún no leyó localStorage".
+  const ready = useSyncExternalStore(noopSubscribe, () => true, () => false);
 
   const itemCount = currentLines.reduce((sum, l) => sum + l.quantity, 0);
   const subtotal = currentLines.reduce((sum, l) => sum + l.quantity * l.price, 0);
 
   return {
     lines: currentLines,
+    ready,
     addLine,
     updateQuantity,
     removeLine,

@@ -98,6 +98,31 @@ async function main() {
     },
   });
 
+  // Condiciones negociadas de ejemplo: mezcla de precio fijo y % de
+  // descuento, para que el catálogo del cliente demo muestre la diferencia.
+  const NEGOTIATED: { name: string; fixedPrice?: number; discountPercent?: number }[] = [
+    { name: "Limón", fixedPrice: 3.2 },
+    { name: "Cebolla roja", fixedPrice: 2.0 },
+    { name: "Tomate", discountPercent: 8 },
+    { name: "Papa amarilla", discountPercent: 5 },
+    { name: "Ají amarillo", discountPercent: 10 },
+  ];
+  const priceList = await prisma.customerPriceList.upsert({
+    where: { companyId: company.id },
+    update: {},
+    create: { companyId: company.id, name: "Lista El Buen Sazón" },
+  });
+  for (const n of NEGOTIATED) {
+    const product = await prisma.product.findFirst({ where: { name: n.name } });
+    if (!product) continue;
+    const terms = { fixedPrice: n.fixedPrice ?? null, discountPercent: n.discountPercent ?? null };
+    await prisma.customerPriceListItem.upsert({
+      where: { priceListId_productId: { priceListId: priceList.id, productId: product.id } },
+      update: terms,
+      create: { priceListId: priceList.id, productId: product.id, ...terms },
+    });
+  }
+
   const demoPasswordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
   const owner = await prisma.user.upsert({
     where: { phone: "+51999111222" },

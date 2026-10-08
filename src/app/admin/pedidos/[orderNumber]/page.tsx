@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { formatCalendarDate } from "@/lib/dates";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { DeliveryWeightsForm } from "@/components/admin/delivery-weights-form";
 
@@ -43,11 +44,7 @@ async function OrderDetail({ params }: { params: Promise<{ orderNumber: string }
             </p>
             <p className="text-foreground/60">
               Fecha solicitada:{" "}
-              {order.requestedDate.toLocaleDateString("es-PE", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })}
+              {formatCalendarDate(order.requestedDate)}
             </p>
             {order.branch.deliveryWindow && (
               <p className="text-foreground/60">Ventana: {order.branch.deliveryWindow}</p>
