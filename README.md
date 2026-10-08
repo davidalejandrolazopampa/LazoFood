@@ -78,6 +78,25 @@ decisión, mínimamente:
 | `npm run db:migrate` | Aplica migraciones de Prisma |
 | `npm run db:studio` | Explorador visual de la base de datos |
 | `npm run db:seed` | Carga catálogo y empresa cliente de ejemplo |
+| `npm test` | Corre la suite de tests una vez |
+| `npm run test:watch` | Tests en modo watch |
+
+## Tests
+
+`src/**/*.test.ts` son tests unitarios de lógica pura (resolución de
+precios, hashing de contraseñas) — no tocan la base de datos.
+
+`tests/integration/*.test.ts` sí pegan contra la base de datos real de
+`DATABASE_URL` (la misma que usa `npm run dev`), porque son el tipo de
+bug que más importa en este proyecto: que el precio del día sea
+append-only, que el subtotal se recalcule sobre lo entregado y no lo
+pedido, que una lista de precio negociada realmente cambie lo que ve el
+cliente. Cada test crea sus propios datos de prueba (RUC con prefijo
+`TEST-`) y los borra al terminar. Requieren Postgres levantado y el
+catálogo sembrado (`docker compose up -d && npm run db:seed`).
+
+Para CI real, lo correcto es apuntar `DATABASE_URL` a una base
+descartable en vez de la de desarrollo — hoy no hay ese aislamiento.
 
 ## Marca
 
