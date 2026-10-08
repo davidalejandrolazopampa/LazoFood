@@ -1,9 +1,15 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { SiteHeader } from "@/components/site-header";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import {
+  CustomerIdentityForm,
+  CustomerIdentityBadge,
+} from "@/components/catalogo/customer-identity";
 import { prisma } from "@/lib/prisma";
+import { resolvePrice, CUSTOMER_COOKIE } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "Catálogo | LazoFood",
@@ -16,23 +22,48 @@ const unitLabel: Record<string, string> = {
   SACK: "saco",
 };
 
+async function getIdentifiedCompany() {
+  const cookieStore = await cookies();
+  const companyId = cookieStore.get(CUSTOMER_COOKIE)?.value;
+  if (!companyId) return null;
+
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    include: { priceList: { include: { items: true } } },
+  });
+  return company;
+}
+
 async function getCatalog() {
   try {
-    const categories = await prisma.category.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        products: {
-          where: { active: true },
-          orderBy: { name: "asc" },
-          include: {
-            dailyPrices: { orderBy: { validFrom: "desc" }, take: 1 },
+    const [categories, company] = await Promise.all([
+      prisma.category.findMany({
+        orderBy: { name: "asc" },
+        include: {
+          products: {
+            where: { active: true },
+            orderBy: { name: "asc" },
+            include: {
+              dailyPrices: { orderBy: { validFrom: "desc" }, take: 1 },
+            },
           },
         },
-      },
-    });
-    return { categories, live: true as const };
+      }),
+      getIdentifiedCompany(),
+    ]);
+
+    const negotiatedByProduct = new Map(
+      company?.priceList?.items.map((item) => [item.productId, item]) ?? []
+    );
+
+    return { categories, live: true as const, company, negotiatedByProduct };
   } catch {
-    return { categories: [], live: false as const };
+    return {
+      categories: [],
+      live: false as const,
+      company: null,
+      negotiatedByProduct: new Map(),
+    };
   }
 }
 
@@ -47,10 +78,18 @@ function CatalogSkeleton() {
 }
 
 async function CatalogContent() {
-  const { categories, live } = await getCatalog();
+  const { categories, live, company, negotiatedByProduct } = await getCatalog();
 
   return (
     <>
+      <div className="mt-4">
+        {company ? (
+          <CustomerIdentityBadge tradeName={company.tradeName} />
+        ) : (
+          <CustomerIdentityForm />
+        )}
+      </div>
+
       {!live && (
         <div className="mt-6 rounded-2xl bg-amber-100 p-4 text-sm text-amber-800">
           No hay conexión a la base de datos todavía (
@@ -78,7 +117,20 @@ async function CatalogContent() {
               </h2>
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {category.products.map((product) => {
-                  const price = Number(product.dailyPrices[0]?.price ?? 0);
+                  const dailyPrice = Number(product.dailyPrices[0]?.price ?? 0);
+                  const negotiated = negotiatedByProduct.get(product.id);
+                  const price = resolvePrice(
+                    dailyPrice,
+                    negotiated
+                      ? {
+                          fixedPrice: negotiated.fixedPrice ? Number(negotiated.fixedPrice) : null,
+                          discountPercent: negotiated.discountPercent
+                            ? Number(negotiated.discountPercent)
+                            : null,
+                        }
+                      : null
+                  );
+                  const hasDiscount = price !== dailyPrice;
                   return (
                     <div
                       key={product.id}
@@ -100,7 +152,12 @@ async function CatalogContent() {
                           <p className="text-sm font-semibold text-foreground">
                             {product.name}
                           </p>
-                          <p className="mt-1 text-base font-bold text-brand-tomato">
+                          {hasDiscount && (
+                            <p className="text-xs text-foreground/40 line-through">
+                              S/ {dailyPrice.toFixed(2)}
+                            </p>
+                          )}
+                          <p className="mt-0.5 text-base font-bold text-brand-tomato">
                             S/ {price.toFixed(2)}
                             <span className="ml-1 text-xs font-normal text-foreground/50">
                               / {unitLabel[product.unit] ?? product.unit.toLowerCase()}
@@ -137,8 +194,8 @@ export default function CatalogoPage() {
           Catálogo — precio del día
         </h1>
         <p className="mt-2 text-foreground/70">
-          Los precios mostrados son la lista general. Al activar tu cuenta,
-          verás tu lista negociada.
+          Los precios mostrados son la lista general. Ingresa tu RUC si ya
+          eres cliente para ver tu lista negociada.
         </p>
 
         <Suspense fallback={<CatalogSkeleton />}>
