@@ -32,7 +32,7 @@ async function main() {
         categoryId: categoryIds[p.category],
         unit: p.unit as UnitOfMeasure,
         minOrderQty: p.minOrderQty ?? 1,
-        imageUrl: `/products/${p.sku}.svg`,
+        imageUrl: `/products/icons/${p.emoji}.svg`,
       },
       create: {
         sku: p.sku,
@@ -40,7 +40,7 @@ async function main() {
         categoryId: categoryIds[p.category],
         unit: p.unit as UnitOfMeasure,
         minOrderQty: p.minOrderQty ?? 1,
-        imageUrl: `/products/${p.sku}.svg`,
+        imageUrl: `/products/icons/${p.emoji}.svg`,
       },
     });
 
