@@ -38,7 +38,7 @@ async function getCatalog() {
 
 function CatalogSkeleton() {
   return (
-    <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="aspect-square animate-pulse rounded-2xl bg-white ring-1 ring-black/5" />
       ))}
@@ -76,7 +76,7 @@ async function CatalogContent() {
               <h2 className="text-xl font-bold text-brand-sage">
                 {category.name}
               </h2>
-              <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {category.products.map((product) => {
                   const price = Number(product.dailyPrices[0]?.price ?? 0);
                   return (

@@ -29,21 +29,21 @@ export function AddToCartButton({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center rounded-full border border-black/10">
+    <div className="space-y-1.5">
+      <div className="flex w-full items-center justify-between rounded-full border border-black/10">
         <button
           type="button"
           aria-label="Reducir cantidad"
-          className="px-3 py-1.5 text-foreground/60 hover:text-brand-tomato"
+          className="px-2.5 py-1 text-foreground/60 hover:text-brand-tomato"
           onClick={() => setQty((q) => Math.max(minOrderQty, round2(q - step)))}
         >
           −
         </button>
-        <span className="min-w-10 text-center text-sm tabular-nums">{qty}</span>
+        <span className="text-center text-xs tabular-nums">{qty}</span>
         <button
           type="button"
           aria-label="Aumentar cantidad"
-          className="px-3 py-1.5 text-foreground/60 hover:text-brand-tomato"
+          className="px-2.5 py-1 text-foreground/60 hover:text-brand-tomato"
           onClick={() => setQty((q) => round2(q + step))}
         >
           +
@@ -52,7 +52,7 @@ export function AddToCartButton({
       <button
         type="button"
         onClick={handleAdd}
-        className="flex-1 rounded-full bg-brand-sage px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-brand-tomato"
+        className="w-full rounded-full bg-brand-sage px-2 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-tomato sm:text-sm"
       >
         {justAdded ? "Agregado ✓" : "Agregar"}
       </button>

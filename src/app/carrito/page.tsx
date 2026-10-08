@@ -38,10 +38,10 @@ export default function CarritoPage() {
               {lines.map((line) => (
                 <div
                   key={line.productId}
-                  className="flex items-center justify-between gap-4 p-5"
+                  className="flex flex-wrap items-center justify-between gap-3 p-5"
                 >
-                  <div>
-                    <p className="font-semibold text-foreground">{line.name}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-foreground">{line.name}</p>
                     <p className="text-sm text-foreground/50">
                       S/ {line.price.toFixed(2)} /{" "}
                       {unitLabel[line.unit] ?? line.unit.toLowerCase()}
@@ -56,9 +56,9 @@ export default function CarritoPage() {
                       onChange={(e) =>
                         updateQuantity(line.productId, Number(e.target.value))
                       }
-                      className="w-20 rounded-lg border border-black/10 px-2 py-1.5 text-right tabular-nums"
+                      className="w-16 rounded-lg border border-black/10 px-2 py-1.5 text-right tabular-nums sm:w-20"
                     />
-                    <p className="w-24 text-right font-semibold text-foreground">
+                    <p className="w-20 text-right font-semibold text-foreground sm:w-24">
                       S/ {(line.price * line.quantity).toFixed(2)}
                     </p>
                     <button
