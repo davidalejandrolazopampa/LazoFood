@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { SiteHeader } from "@/components/site-header";
 
 type CatalogPreviewItem = {
   id: string;
@@ -123,6 +124,12 @@ async function CatalogGrid() {
           </span>
         )}
       </div>
+      <Link
+        href="/catalogo"
+        className="mt-1 inline-block text-sm font-semibold text-brand-sage hover:text-brand-tomato"
+      >
+        Ver catálogo completo →
+      </Link>
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item) => (
           <div
@@ -146,34 +153,7 @@ async function CatalogGrid() {
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-brand-cream">
-      <header className="sticky top-0 z-10 border-b border-black/5 bg-brand-cream/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-          <Image
-            src="/brand/logo.svg"
-            alt="LazoFood"
-            width={150}
-            height={82}
-            priority
-          />
-          <nav className="hidden items-center gap-8 text-sm font-medium text-foreground/80 md:flex">
-            <a href="#catalogo" className="hover:text-brand-tomato">
-              Catálogo
-            </a>
-            <a href="#como-funciona" className="hover:text-brand-tomato">
-              Cómo funciona
-            </a>
-            <a href="#contacto" className="hover:text-brand-tomato">
-              Contacto
-            </a>
-          </nav>
-          <Link
-            href="#contacto"
-            className="rounded-full bg-brand-sage px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-tomato"
-          >
-            Solicitar acceso
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="flex-1">
         {/* Hero */}
@@ -199,12 +179,12 @@ export default function Home() {
                 >
                   Quiero ser cliente
                 </Link>
-                <a
-                  href="#catalogo"
+                <Link
+                  href="/catalogo"
                   className="rounded-full border border-brand-sage/30 px-6 py-3 text-sm font-semibold text-brand-sage transition-colors hover:bg-brand-sage/10"
                 >
                   Ver catálogo
-                </a>
+                </Link>
               </div>
             </div>
             <div className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-black/5">
