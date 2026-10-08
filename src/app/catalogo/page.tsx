@@ -76,7 +76,7 @@ async function CatalogContent() {
               <h2 className="text-xl font-bold text-brand-sage">
                 {category.name}
               </h2>
-              <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
                 {category.products.map((product) => {
                   const price = Number(product.dailyPrices[0]?.price ?? 0);
                   return (
@@ -84,30 +84,30 @@ async function CatalogContent() {
                       key={product.id}
                       className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
                     >
-                      <div className="aspect-square w-full bg-[#f2efe4]">
+                      <div className="flex h-20 w-full items-center justify-center bg-[#f2efe4]">
                         {product.imageUrl && (
                           <Image
                             src={product.imageUrl}
                             alt={product.name}
-                            width={240}
-                            height={240}
-                            className="h-full w-full object-cover"
+                            width={48}
+                            height={48}
+                            className="h-12 w-12 object-contain"
                           />
                         )}
                       </div>
-                      <div className="flex flex-1 flex-col justify-between p-4">
+                      <div className="flex flex-1 flex-col justify-between p-3">
                         <div>
-                          <p className="font-semibold text-foreground">
+                          <p className="text-sm font-semibold text-foreground">
                             {product.name}
                           </p>
-                          <p className="mt-1 text-xl font-bold text-brand-tomato">
+                          <p className="mt-1 text-base font-bold text-brand-tomato">
                             S/ {price.toFixed(2)}
-                            <span className="ml-1 text-sm font-normal text-foreground/50">
+                            <span className="ml-1 text-xs font-normal text-foreground/50">
                               / {unitLabel[product.unit] ?? product.unit.toLowerCase()}
                             </span>
                           </p>
                         </div>
-                        <div className="mt-3">
+                        <div className="mt-2">
                           <AddToCartButton
                             productId={product.id}
                             name={product.name}

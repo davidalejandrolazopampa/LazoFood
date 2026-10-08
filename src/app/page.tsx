@@ -138,14 +138,14 @@ async function CatalogGrid() {
             key={item.id}
             className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
           >
-            <div className="aspect-square w-full bg-[#f2efe4]">
+            <div className="flex h-24 w-full items-center justify-center bg-[#f2efe4]">
               {item.imageUrl && (
                 <Image
                   src={item.imageUrl}
                   alt={item.name}
-                  width={240}
-                  height={240}
-                  className="h-full w-full object-cover"
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 object-contain"
                 />
               )}
             </div>
