@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireStaff } from "@/lib/auth";
 
 const schema = z.object({
   productId: z.string().min(1),
@@ -15,6 +16,7 @@ export async function updatePrice(
   _prevState: UpdatePriceState,
   formData: FormData
 ): Promise<UpdatePriceState> {
+  await requireStaff();
   const parsed = schema.safeParse({
     productId: formData.get("productId"),
     price: formData.get("price"),

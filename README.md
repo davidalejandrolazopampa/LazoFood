@@ -1,5 +1,11 @@
 # LazoFood
 
+> **Proyecto de portafolio.** Se construyó para LazoFood, que dejó de operar
+> en este rubro; hoy es una demo funcional. Precios, empresas y pedidos son
+> datos de prueba, no se vende ni se entrega nada, y las integraciones
+> externas (SUNAT, WhatsApp, pagos) no están conectadas. El sitio lo indica
+> con una franja en la cabecera.
+
 Ecommerce B2B de verduras, frutas y tubérculos para cadenas de pollería y
 restaurantes. No es una tienda al consumidor final: el comprador es una
 empresa, con precios negociados, crédito a 15/30 días, y entrega por rutas
@@ -69,6 +75,44 @@ decisión, mínimamente:
    conectada, la sección "Precio del día" muestra una vista previa estática
    y lo indica con una etiqueta — no rompe la página.
 
+## Cuentas de demo
+
+`npm run db:seed` crea estas cuentas (contraseña `demo1234` para ambas),
+y se ingresa con las dos desde `/login`:
+
+| Correo | Rol | Entra a |
+|---|---|---|
+| `demo@lazofood.pe` | Equipo interno (ADMIN) | `/admin`: precio del día, pedidos, listas negociadas |
+| `cliente@lazofood.pe` | Dueño de "Pollería El Buen Sazón" | `/mi-cuenta`: pedidos, sedes, crédito |
+
+También se puede crear una empresa nueva en `/registro`. Cualquier RUC de
+11 dígitos sirve, porque no se consulta a SUNAT.
+
+## Recorrido sugerido para probar la demo
+
+1. Ingresa como `cliente@lazofood.pe`. El catálogo ya muestra sus precios
+   negociados.
+2. Arma un carrito y confirma. En el checkout, el cliente con cuenta solo
+   elige la sede, sin volver a llenar datos.
+3. Sal e ingresa como `demo@lazofood.pe`. En `/admin/pedidos` aparece el
+   pedido: registra el peso real entregado y verás que el subtotal se
+   recalcula.
+4. O registra una empresa nueva en `/registro`, agrega una segunda sede
+   desde "Mi cuenta" y pide como esa empresa.
+
+## Cuentas de cliente
+
+- **Registro** (`/registro`): crea empresa, primera sede y usuario dueño
+  en una transacción (`src/lib/registration.ts`). Si la empresa ya existía
+  porque pidió como invitado, el registro la *reclama* en vez de duplicarla.
+- **Login único** (`/login`): el equipo interno va a `/admin` y los
+  clientes a `/mi-cuenta`. `/admin` y sus Server Actions verifican el rol
+  (`requireStaff`); una sesión de cliente no puede usarlas.
+- **Checkout**: con sesión, el pedido va a una de las sedes de la empresa,
+  y se verifica en el servidor que la sede le pertenezca. Como invitado, no
+  se puede pedir con el RUC o el teléfono de una empresa que ya tiene
+  cuenta, para que nadie sobrescriba sus datos.
+
 ## Scripts
 
 | Script | Qué hace |
@@ -117,15 +161,15 @@ o Figma, y reemplace el `<text>` del wordmark por esos paths.
 ## Hoja de ruta
 
 **Fase 1 — MVP transaccional**
-- Catálogo con precio del día por categoría
-- Carrito y checkout B2B (sin pago en línea, pedido queda "por confirmar")
-- Registro de empresa + sede + usuarios
-- Panel admin simple: cargar precio del día, ver pedidos
+- Catálogo con precio del día por categoría ✓
+- Carrito y checkout B2B (sin pago en línea, pedido queda "por confirmar") ✓
+- Registro de empresa + sede + usuarios ✓
+- Panel admin simple: cargar precio del día, ver pedidos ✓
 
 **Fase 2 — Operación real**
-- Listas de precios negociadas por empresa
+- Listas de precios negociadas por empresa ✓
 - Línea de crédito, estado de cuenta, bloqueo por mora
-- Pesaje y ajuste de pedido al despacho (quantityDelivered)
+- Pesaje y ajuste de pedido al despacho (quantityDelivered) ✓
 - Rutas de reparto por zona con corte horario
 - Facturación electrónica vía OSE/PSE (Nubefact/Bizlinks/Efact)
 - Notificaciones de pedido y despacho por WhatsApp Business API

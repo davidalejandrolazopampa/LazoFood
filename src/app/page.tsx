@@ -189,7 +189,7 @@ export default function Home() {
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
-                  href="#contacto"
+                  href="/registro"
                   className="rounded-full bg-brand-tomato px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-tomato-dark"
                 >
                   Quiero ser cliente
@@ -249,15 +249,16 @@ export default function Home() {
               ¿Tu cadena ya compra verduras a ciegas cada semana?
             </h2>
             <p className="mt-4 text-white/80">
-              Escríbenos y te activamos una cuenta con lista de precios
-              negociada y línea de crédito en menos de 48 horas.
+              Registra tu empresa en un minuto y pide hoy mismo. Un asesor
+              activa tu lista de precios negociada y línea de crédito en
+              menos de 48 horas.
             </p>
-            <a
-              href="mailto:ventas@lazofood.pe"
+            <Link
+              href="/registro"
               className="mt-8 inline-block rounded-full bg-white px-6 py-3 text-sm font-semibold text-brand-sage transition-colors hover:bg-brand-cream"
             >
-              ventas@lazofood.pe
-            </a>
+              Registrar mi empresa
+            </Link>
           </div>
         </section>
       </main>
@@ -266,6 +267,10 @@ export default function Home() {
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-6 text-center text-sm text-foreground/50">
           <Image src="/brand/logo.svg" alt="LazoFood" width={90} height={49} />
           <p>© 2026 LazoFood. Lima, Perú.</p>
+          <p className="text-xs">
+            Proyecto de portafolio: precios, empresas y pedidos son datos de
+            prueba. No se venden ni entregan productos reales.
+          </p>
         </div>
       </footer>
     </div>

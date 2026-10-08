@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireStaff } from "@/lib/auth";
 
 const schema = z.object({
   companyId: z.string().min(1),
@@ -18,6 +19,7 @@ export async function saveNegotiatedPrice(
   _prevState: SaveNegotiatedPriceState,
   formData: FormData
 ): Promise<SaveNegotiatedPriceState> {
+  await requireStaff();
   const parsed = schema.safeParse({
     companyId: formData.get("companyId"),
     productId: formData.get("productId"),

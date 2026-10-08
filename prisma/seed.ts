@@ -10,6 +10,8 @@ const prisma = new PrismaClient();
 // para producción (ver nota en src/app/admin/layout.tsx).
 const DEMO_EMAIL = "demo@lazofood.pe";
 const DEMO_PASSWORD = "demo1234";
+// Cuenta de cliente de demo (misma contraseña) para probar /mi-cuenta.
+const DEMO_CUSTOMER_EMAIL = "cliente@lazofood.pe";
 
 const CATEGORY_LABEL: Record<ProduceCategory, string> = {
   verduras: "Verduras",
@@ -96,18 +98,20 @@ async function main() {
     },
   });
 
+  const demoPasswordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
   const owner = await prisma.user.upsert({
     where: { phone: "+51999111222" },
-    update: {},
+    update: { email: DEMO_CUSTOMER_EMAIL, passwordHash: demoPasswordHash },
     create: {
       phone: "+51999111222",
       name: "Juan Pérez",
+      email: DEMO_CUSTOMER_EMAIL,
+      passwordHash: demoPasswordHash,
       role: UserRole.CUSTOMER_OWNER,
       companyId: company.id,
     },
   });
 
-  const demoPasswordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
   await prisma.user.upsert({
     where: { phone: "+51999000000" },
     update: { email: DEMO_EMAIL, passwordHash: demoPasswordHash, name: "Admin Demo" },
@@ -122,6 +126,7 @@ async function main() {
 
   console.log("Seed completo:", { company: company.tradeName, owner: owner.name });
   console.log(`Login de prueba: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
+  console.log(`Cliente de prueba: ${DEMO_CUSTOMER_EMAIL} / ${DEMO_PASSWORD}`);
 }
 
 main()

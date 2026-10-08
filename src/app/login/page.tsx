@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { login, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
@@ -16,10 +17,10 @@ export default function LoginPage() {
           <Image src="/brand/logo.svg" alt="LazoFood" width={130} height={71} priority />
         </div>
         <h1 className="mt-6 text-center text-lg font-bold text-foreground">
-          Panel interno
+          Ingresar
         </h1>
         <p className="mt-1 text-center text-sm text-foreground/60">
-          Acceso para equipo LazoFood
+          Clientes y equipo LazoFood
         </p>
 
         <form action={formAction} className="mt-6 space-y-4">
@@ -58,10 +59,22 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-5 rounded-lg bg-amber-50 p-3 text-center text-xs text-amber-800">
-          Cuenta de demo para pruebas: <strong>demo@lazofood.pe</strong> /{" "}
-          <strong>demo1234</strong> — ya viene rellenada arriba.
+        <p className="mt-5 text-center text-sm text-foreground/60">
+          ¿Tu empresa aún no tiene cuenta?{" "}
+          <Link href="/registro" className="font-semibold text-brand-sage hover:text-brand-tomato">
+            Regístrala
+          </Link>
         </p>
+
+        <div className="mt-5 space-y-1 rounded-lg bg-amber-50 p-3 text-center text-xs text-amber-800">
+          <p className="font-semibold">Cuentas de demo (contraseña demo1234)</p>
+          <p>
+            Panel interno: <strong>demo@lazofood.pe</strong> — ya rellenada arriba
+          </p>
+          <p>
+            Cliente: <strong>cliente@lazofood.pe</strong>
+          </p>
+        </div>
       </div>
     </div>
   );

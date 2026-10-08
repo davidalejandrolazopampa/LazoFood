@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireStaff } from "@/lib/auth";
 import { OrderStatus } from "@prisma/client";
 
 const schema = z.object({
@@ -16,6 +17,7 @@ export async function updateOrderStatus(
   _prevState: UpdateOrderStatusState,
   formData: FormData
 ): Promise<UpdateOrderStatusState> {
+  await requireStaff();
   const parsed = schema.safeParse({
     orderNumber: formData.get("orderNumber"),
     status: formData.get("status"),
@@ -53,6 +55,7 @@ export async function saveDeliveredQuantities(
   _prevState: SaveDeliveredState,
   formData: FormData
 ): Promise<SaveDeliveredState> {
+  await requireStaff();
   const orderNumber = formData.get("orderNumber");
   if (typeof orderNumber !== "string" || !orderNumber) {
     return { error: "Pedido inválido" };

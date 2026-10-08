@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { createSession, verifyPassword, SESSION_COOKIE, STAFF_ROLES } from "@/lib/auth";
+import { startCustomerSession } from "@/lib/customer-session";
 
 const schema = z.object({
   email: z.string().email("Correo inválido"),
@@ -15,7 +16,7 @@ export type LoginState = { error?: string };
 
 export async function login(_prevState: LoginState, formData: FormData): Promise<LoginState> {
   const parsed = schema.safeParse({
-    email: formData.get("email"),
+    email: String(formData.get("email") ?? "").trim().toLowerCase(),
     password: formData.get("password"),
   });
   if (!parsed.success) {
@@ -32,8 +33,13 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
     return { error: "Correo o contraseña incorrectos" };
   }
 
+  // Mismo login para equipo interno y clientes; cada uno cae en su sitio.
   if (!STAFF_ROLES.includes(user.role as (typeof STAFF_ROLES)[number])) {
-    return { error: "Esta cuenta no tiene acceso al panel interno" };
+    if (!user.companyId) {
+      return { error: "Esta cuenta no está asociada a ninguna empresa" };
+    }
+    await startCustomerSession(user.id, user.companyId);
+    redirect("/mi-cuenta");
   }
 
   const { token, expiresAt } = await createSession(user.id);

@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { getUserByToken, SESSION_COOKIE } from "@/lib/auth";
+import { getUserByToken, SESSION_COOKIE, STAFF_ROLES } from "@/lib/auth";
 import { logout } from "./logout-action";
 
 // Todo /admin depende de la cookie de sesión en cada request (gate de
@@ -14,6 +14,8 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const user = await getUserByToken(cookieStore.get(SESSION_COOKIE)?.value);
 
   if (!user) redirect("/login");
+  // Clientes también tienen sesión (mismo login); no deben ver el panel.
+  if (!STAFF_ROLES.includes(user.role as (typeof STAFF_ROLES)[number])) redirect("/mi-cuenta");
 
   return (
     <div className="flex flex-1 flex-col bg-[#f4f3ee]">

@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import type { User } from "@prisma/client";
 
@@ -38,3 +39,14 @@ export async function getUserByToken(token: string | undefined): Promise<User | 
 // Roles que pueden entrar a /admin. Los roles de cliente (dueño/staff de la
 // empresa compradora) no deben ver el panel interno.
 export const STAFF_ROLES = ["ADMIN", "SALES", "WAREHOUSE", "DRIVER"] as const;
+
+// Server Actions son endpoints públicos: el layout de /admin protege las
+// páginas, pero no las acciones. Cada acción del panel debe llamar esto.
+export async function requireStaff(): Promise<User> {
+  const cookieStore = await cookies();
+  const user = await getUserByToken(cookieStore.get(SESSION_COOKIE)?.value);
+  if (!user || !STAFF_ROLES.includes(user.role as (typeof STAFF_ROLES)[number])) {
+    throw new Error("No autorizado");
+  }
+  return user;
+}
