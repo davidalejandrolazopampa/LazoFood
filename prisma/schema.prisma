@@ -1,0 +1,365 @@
+// LazoFood — modelo de datos B2B para venta de verduras, frutas y tubérculos
+// a cadenas de pollería y restaurantes.
+//
+// Decisiones de diseño que no son obvias desde el código:
+// - Los precios NUNCA se guardan como Float: usan Decimal para evitar errores
+//   de redondeo en dinero y peso (ej. 2.1 + 0.1 en float no da 2.2 exacto).
+// - DailyPrice es append-only (no se actualiza, se inserta una fila nueva cada
+//   día): así queda historial de precios para auditoría y reportes de margen.
+// - OrderItem separa quantityOrdered de quantityDelivered porque el producto
+//   se pesa en el momento del despacho y casi nunca coincide con lo pedido.
+// - CustomerPriceList permite que cada empresa cliente (ej. Norky's vs. una
+//   cevichería de barrio) tenga condiciones negociadas distintas sobre el
+//   mismo catálogo, sin duplicar productos.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Usuarios y empresas cliente (B2B: el que compra es una empresa, no una
+// persona suelta; una empresa puede tener varios usuarios: dueño, chef,
+// encargado de compras)
+// ──────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN // equipo LazoFood
+  SALES // vendedor / ejecutivo de cuenta
+  WAREHOUSE // almacén / pesaje / despacho
+  DRIVER // reparto
+  CUSTOMER_OWNER // dueño de la empresa cliente
+  CUSTOMER_STAFF // personal autorizado a pedir (chef, encargado de compras)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  phone         String    @unique // login principal: WhatsApp/OTP por celular
+  name          String
+  role          UserRole
+  passwordHash  String?
+  companyId     String?
+  company       Company?  @relation(fields: [companyId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  ordersCreated Order[]   @relation("OrderCreatedBy")
+  sessions      Session[]
+
+  @@index([companyId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Empresa cliente: una pollería, restaurante o cadena. "Cadena" se modela
+// como una Company padre con varias Branch (sedes) — así el pedido se hace
+// a nivel de sede pero la factura y el crédito se consolidan a nivel cadena.
+model Company {
+  id            String             @id @default(cuid())
+  legalName     String // razón social
+  tradeName     String // nombre comercial (ej. "Norky's")
+  taxId         String             @unique // RUC
+  businessType  String? // "pollería", "restaurante", "cevichería", etc.
+  billingEmail  String?
+  billingPhone  String?
+  active        Boolean            @default(true)
+  creditAccount CreditAccount?
+  priceList     CustomerPriceList?
+  branches      Branch[]
+  users         User[]
+  orders        Order[]
+  invoices      Invoice[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+// Sede de entrega (una cadena puede tener 5 locales con direcciones y
+// ventanas de entrega distintas)
+model Branch {
+  id              String        @id @default(cuid())
+  companyId       String
+  company         Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name            String // "Norky's San Isidro"
+  address         String
+  district        String
+  deliveryZoneId  String?
+  deliveryZone    DeliveryZone? @relation(fields: [deliveryZoneId], references: [id])
+  deliveryWindow  String? // "05:00-07:00"
+  orderCutoffTime String? // "18:00" (hora límite del día anterior)
+  contactName     String?
+  contactPhone    String?
+  active          Boolean       @default(true)
+  orders          Order[]
+
+  @@index([companyId])
+  @@index([deliveryZoneId])
+}
+
+// Zona de reparto: agrupa sedes/direcciones para armar rutas de despacho
+model DeliveryZone {
+  id         String      @id @default(cuid())
+  name       String // "Lima Norte", "Lima Centro"
+  routeOrder Int         @default(0)
+  branches   Branch[]
+  routeStops RouteStop[]
+}
+
+model DeliveryRoute {
+  id         String      @id @default(cuid())
+  date       DateTime    @db.Date
+  driverId   String?
+  driverName String?
+  vehicle    String?
+  status     RouteStatus @default(PLANNED)
+  stops      RouteStop[]
+  createdAt  DateTime    @default(now())
+}
+
+enum RouteStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model RouteStop {
+  id             String        @id @default(cuid())
+  routeId        String
+  route          DeliveryRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  orderId        String        @unique
+  order          Order         @relation(fields: [orderId], references: [id])
+  deliveryZoneId String?
+  deliveryZone   DeliveryZone? @relation(fields: [deliveryZoneId], references: [id])
+  sequence       Int
+  deliveredAt    DateTime?
+  signatureUrl   String? // foto/firma de conformidad
+
+  @@index([routeId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Crédito — el 90% de los clientes paga contra factura a 15/30 días, no con
+// tarjeta. Sin esto, el producto no sirve para este rubro.
+// ──────────────────────────────────────────────────────────────────────────
+
+model CreditAccount {
+  id              String   @id @default(cuid())
+  companyId       String   @unique
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  creditLimit     Decimal  @db.Decimal(12, 2) // línea de crédito en soles
+  paymentTermDays Int      @default(15) // 15 o 30 días
+  currentBalance  Decimal  @default(0) @db.Decimal(12, 2) // deuda vigente
+  onHold          Boolean  @default(false) // bloqueado por mora
+  onHoldReason    String?
+  updatedAt       DateTime @updatedAt
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Catálogo
+// ──────────────────────────────────────────────────────────────────────────
+
+enum UnitOfMeasure {
+  KG // kilogramo (venta a peso: la mayoría de verduras)
+  UNIT // unidad (ej. "atado", "palta und")
+  CRATE // jaba / caja
+  SACK // saco (papa, cebolla al por mayor)
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String // "Verduras", "Frutas", "Tubérculos", "Abarrotes"
+  slug     String    @unique
+  products Product[]
+}
+
+model Product {
+  id             String                  @id @default(cuid())
+  sku            String                  @unique
+  name           String // "Limón" , "Papa blanca"
+  categoryId     String
+  category       Category                @relation(fields: [categoryId], references: [id])
+  unit           UnitOfMeasure
+  imageUrl       String?
+  description    String?
+  active         Boolean                 @default(true)
+  minOrderQty    Decimal                 @default(1) @db.Decimal(10, 2)
+  dailyPrices    DailyPrice[]
+  priceListItems CustomerPriceListItem[]
+  orderItems     OrderItem[]
+  stockMovements StockMovement[]
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([categoryId])
+}
+
+// Precio base del día (lista general). Es append-only: cada actualización de
+// precio inserta una fila nueva con su propia vigencia, nunca se hace UPDATE
+// sobre el precio anterior — así queda trazabilidad de cuánto costaba algo
+// en una fecha dada (necesario para reportes de margen y para defender
+// una factura ante un reclamo del cliente).
+model DailyPrice {
+  id        String    @id @default(cuid())
+  productId String
+  product   Product   @relation(fields: [productId], references: [id])
+  price     Decimal   @db.Decimal(10, 2) // precio por unidad de medida, en soles
+  validFrom DateTime  @default(now())
+  validTo   DateTime? // null = sigue vigente
+  setById   String? // usuario que fijó el precio
+  createdAt DateTime  @default(now())
+
+  @@index([productId, validFrom])
+}
+
+// Lista de precios negociada por empresa cliente (ej. Norky's tiene -5% sobre
+// el precio base, o precio fijo pactado independiente del precio del día).
+model CustomerPriceList {
+  id        String                  @id @default(cuid())
+  companyId String                  @unique
+  company   Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name      String                  @default("Lista negociada")
+  items     CustomerPriceListItem[]
+  updatedAt DateTime                @updatedAt
+}
+
+model CustomerPriceListItem {
+  id              String            @id @default(cuid())
+  priceListId     String
+  priceList       CustomerPriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product           @relation(fields: [productId], references: [id])
+  discountPercent Decimal?          @db.Decimal(5, 2) // ej. 5.00 = -5% sobre precio del día
+  fixedPrice      Decimal?          @db.Decimal(10, 2) // o precio pactado fijo, ignora precio del día
+
+  @@unique([priceListId, productId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Inventario simple (fase 2 puede crecer a mermas/lotes/FIFO por proveedor)
+// ──────────────────────────────────────────────────────────────────────────
+
+enum StockMovementType {
+  PURCHASE // ingreso de mercadería de proveedor/mercado
+  SALE // salida por venta (vinculada a OrderItem)
+  ADJUSTMENT // merma, ajuste de conteo
+}
+
+model StockMovement {
+  id        String            @id @default(cuid())
+  productId String
+  product   Product           @relation(fields: [productId], references: [id])
+  type      StockMovementType
+  quantity  Decimal           @db.Decimal(10, 2) // positivo = ingreso, negativo = salida
+  note      String?
+  createdAt DateTime          @default(now())
+
+  @@index([productId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Pedidos — el corazón del negocio. quantityOrdered vs quantityDelivered
+// porque el peso real se conoce recién al despachar.
+// ──────────────────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  DRAFT // carrito aún no confirmado
+  SUBMITTED // confirmado por el cliente, antes del corte
+  CONFIRMED // aceptado por LazoFood (stock y crédito ok)
+  PICKING // en preparación/pesaje en almacén
+  OUT_FOR_DELIVERY
+  DELIVERED
+  INVOICED
+  CANCELLED
+}
+
+model Order {
+  id               String      @id @default(cuid())
+  orderNumber      String      @unique // correlativo legible, ej. "LF-2026-00123"
+  companyId        String
+  company          Company     @relation(fields: [companyId], references: [id])
+  branchId         String
+  branch           Branch      @relation(fields: [branchId], references: [id])
+  createdById      String
+  createdBy        User        @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  status           OrderStatus @default(DRAFT)
+  requestedDate    DateTime    @db.Date // fecha de entrega solicitada
+  isRecurring      Boolean     @default(false) // generado desde plantilla/"repetir pedido"
+  templateSourceId String? // si vino de una plantilla guardada
+  notes            String?
+  items            OrderItem[]
+  invoice          Invoice?
+  routeStop        RouteStop?
+  subtotal         Decimal     @default(0) @db.Decimal(12, 2) // calculado sobre lo entregado
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  confirmedAt      DateTime?
+  deliveredAt      DateTime?
+
+  @@index([companyId])
+  @@index([branchId])
+  @@index([requestedDate])
+}
+
+model OrderItem {
+  id                String   @id @default(cuid())
+  orderId           String
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product  @relation(fields: [productId], references: [id])
+  quantityOrdered   Decimal  @db.Decimal(10, 2) // lo que el cliente pidió
+  quantityDelivered Decimal? @db.Decimal(10, 2) // lo realmente pesado/entregado
+  unitPriceApplied  Decimal  @db.Decimal(10, 2) // precio ya resuelto (lista negociada o precio del día)
+  lineTotal         Decimal? @db.Decimal(12, 2) // = quantityDelivered * unitPriceApplied
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Facturación — LazoFood no timbra directo contra SUNAT: delega a un OSE/PSE
+// (Nubefact, Bizlinks, Efact) y guarda la referencia externa.
+// ──────────────────────────────────────────────────────────────────────────
+
+enum InvoiceStatus {
+  PENDING
+  ISSUED // aceptada por SUNAT vía el OSE
+  REJECTED
+  PAID
+  OVERDUE
+  VOIDED
+}
+
+model Invoice {
+  id                  String        @id @default(cuid())
+  orderId             String        @unique
+  order               Order         @relation(fields: [orderId], references: [id])
+  companyId           String
+  company             Company       @relation(fields: [companyId], references: [id])
+  series              String // "F001"
+  number              Int
+  issueDate           DateTime      @default(now())
+  dueDate             DateTime
+  subtotal            Decimal       @db.Decimal(12, 2)
+  igv                 Decimal       @db.Decimal(12, 2) // 18%
+  total               Decimal       @db.Decimal(12, 2)
+  status              InvoiceStatus @default(PENDING)
+  externalProviderRef String? // id de Nubefact/Bizlinks/Efact
+  pdfUrl              String?
+  xmlUrl              String?
+  paidAt              DateTime?
+
+  @@unique([series, number])
+  @@index([companyId])
+}
