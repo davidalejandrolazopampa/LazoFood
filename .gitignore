@@ -41,3 +41,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env
+
+# instrucciones para asistentes que genera `next dev`
+AGENTS.md
