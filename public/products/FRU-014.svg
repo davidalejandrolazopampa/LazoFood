@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <defs>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="240" height="240" rx="32" fill="#f2efe4" />
+  <ellipse cx="120" cy="198" rx="54" ry="10" fill="#1a1a1a" opacity="0.12" filter="url(#shadow)" />
+  <defs><clipPath id="clip-netted"><circle cx="120" cy="124" r="52" /></clipPath></defs>
+        <circle cx="120" cy="124" r="52" fill="#d9c97a" stroke="rgba(30,22,14,0.16)" stroke-width="1.5" />
+        <g clip-path="url(#clip-netted)"><path d="M75,74 Q120,124 75,174" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.7" /><path d="M70,79 Q120,124 170,79" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.5" /><path d="M90,74 Q120,124 90,174" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.7" /><path d="M70,94 Q120,124 170,94" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.5" /><path d="M105,74 Q120,124 105,174" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.7" /><path d="M70,109 Q120,124 170,109" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.5" /><path d="M120,74 Q120,124 120,174" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.7" /><path d="M70,124 Q120,124 170,124" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.5" /><path d="M135,74 Q120,124 135,174" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.7" /><path d="M70,139 Q120,124 170,139" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.5" /><path d="M150,74 Q120,124 150,174" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.7" /><path d="M70,154 Q120,124 170,154" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.5" /><path d="M165,74 Q120,124 165,174" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.7" /><path d="M70,169 Q120,124 170,169" stroke="#e8dca0" stroke-width="1.4" fill="none" opacity="0.5" /></g>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <defs>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="240" height="240" rx="32" fill="#f2efe4" />
+  <ellipse cx="120" cy="198" rx="54" ry="10" fill="#1a1a1a" opacity="0.12" filter="url(#shadow)" />
+  <g transform="rotate(0 120 124)"><path transform="rotate(0 120 106)" d="
+    M 109,72
+    C 109,83 131,83 131,72
+    C 131,106 122.75,134.52 120,129
+    C 117.25,134.52 109,106 109,72
+    Z" fill="#e3dbc0" stroke="rgba(30,22,14,0.16)" stroke-width="1.5" /></g><g transform="rotate(60 120 124)"><path transform="rotate(0 120 106)" d="
+    M 109,72
+    C 109,83 131,83 131,72
+    C 131,106 122.75,134.52 120,129
+    C 117.25,134.52 109,106 109,72
+    Z" fill="#e3dbc0" stroke="rgba(30,22,14,0.16)" stroke-width="1.5" /></g><g transform="rotate(120 120 124)"><path transform="rotate(0 120 106)" d="
+    M 109,72
+    C 109,83 131,83 131,72
+    C 131,106 122.75,134.52 120,129
+    C 117.25,134.52 109,106 109,72
+    Z" fill="#e3dbc0" stroke="rgba(30,22,14,0.16)" stroke-width="1.5" /></g><g transform="rotate(180 120 124)"><path transform="rotate(0 120 106)" d="
+    M 109,72
+    C 109,83 131,83 131,72
+    C 131,106 122.75,134.52 120,129
+    C 117.25,134.52 109,106 109,72
+    Z" fill="#e3dbc0" stroke="rgba(30,22,14,0.16)" stroke-width="1.5" /></g><g transform="rotate(240 120 124)"><path transform="rotate(0 120 106)" d="
+    M 109,72
+    C 109,83 131,83 131,72
+    C 131,106 122.75,134.52 120,129
+    C 117.25,134.52 109,106 109,72
+    Z" fill="#e3dbc0" stroke="rgba(30,22,14,0.16)" stroke-width="1.5" /></g><g transform="rotate(300 120 124)"><path transform="rotate(0 120 106)" d="
+    M 109,72
+    C 109,83 131,83 131,72
+    C 131,106 122.75,134.52 120,129
+    C 117.25,134.52 109,106 109,72
+    Z" fill="#e3dbc0" stroke="rgba(30,22,14,0.16)" stroke-width="1.5" /></g><circle cx="120" cy="124" r="12" fill="#c7b77e" />
+        <path d="M117,80 L117,64 M123,82 L125,66" stroke="#a9b56a" stroke-width="2.5" stroke-linecap="round" />
+</svg>

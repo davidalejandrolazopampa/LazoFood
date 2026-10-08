@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <defs>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="240" height="240" rx="32" fill="#f2efe4" />
+  <ellipse cx="120" cy="198" rx="54" ry="10" fill="#1a1a1a" opacity="0.12" filter="url(#shadow)" />
+  <path transform="rotate(6 120 124)" d="
+    M 97,42
+    C 97,65 143,65 143,42
+    C 143,124 125.75,197.16 120,183
+    C 114.25,197.16 97,124 97,42
+    Z" fill="#e0c33f" stroke="rgba(30,22,14,0.16)" stroke-width="1.5" /><path d="M113.1,94.5 Q120,124 115.4,159.4" stroke="#5c3763" stroke-width="2" fill="none" opacity="0.4" />
+</svg>

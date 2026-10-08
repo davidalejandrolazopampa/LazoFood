@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { SiteHeader } from "@/components/site-header";
@@ -35,9 +36,99 @@ async function getCatalog() {
   }
 }
 
-export default async function CatalogoPage() {
+function CatalogSkeleton() {
+  return (
+    <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="aspect-square animate-pulse rounded-2xl bg-white ring-1 ring-black/5" />
+      ))}
+    </div>
+  );
+}
+
+async function CatalogContent() {
   const { categories, live } = await getCatalog();
 
+  return (
+    <>
+      {!live && (
+        <div className="mt-6 rounded-2xl bg-amber-100 p-4 text-sm text-amber-800">
+          No hay conexión a la base de datos todavía (
+          <code className="font-mono">DATABASE_URL</code>). Levanta Postgres
+          y corre <code className="font-mono">npm run db:seed</code> para
+          ver el catálogo real.
+        </div>
+      )}
+
+      {live && categories.every((c) => c.products.length === 0) && (
+        <div className="mt-6 rounded-2xl bg-white p-6 text-sm text-foreground/70 ring-1 ring-black/5">
+          Todavía no hay productos cargados. Corre{" "}
+          <code className="font-mono">npm run db:seed</code> para cargar el
+          catálogo de ejemplo.
+        </div>
+      )}
+
+      <div className="mt-10 space-y-14">
+        {categories
+          .filter((c) => c.products.length > 0)
+          .map((category) => (
+            <section key={category.id}>
+              <h2 className="text-xl font-bold text-brand-sage">
+                {category.name}
+              </h2>
+              <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {category.products.map((product) => {
+                  const price = Number(product.dailyPrices[0]?.price ?? 0);
+                  return (
+                    <div
+                      key={product.id}
+                      className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
+                    >
+                      <div className="aspect-square w-full bg-[#f2efe4]">
+                        {product.imageUrl && (
+                          <Image
+                            src={product.imageUrl}
+                            alt={product.name}
+                            width={240}
+                            height={240}
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="flex flex-1 flex-col justify-between p-4">
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {product.name}
+                          </p>
+                          <p className="mt-1 text-xl font-bold text-brand-tomato">
+                            S/ {price.toFixed(2)}
+                            <span className="ml-1 text-sm font-normal text-foreground/50">
+                              / {unitLabel[product.unit] ?? product.unit.toLowerCase()}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="mt-3">
+                          <AddToCartButton
+                            productId={product.id}
+                            name={product.name}
+                            unit={product.unit}
+                            price={price}
+                            minOrderQty={Number(product.minOrderQty)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+      </div>
+    </>
+  );
+}
+
+export default function CatalogoPage() {
   return (
     <div className="flex flex-1 flex-col bg-brand-cream">
       <SiteHeader />
@@ -50,66 +141,9 @@ export default async function CatalogoPage() {
           verás tu lista negociada.
         </p>
 
-        {!live && (
-          <div className="mt-6 rounded-2xl bg-amber-100 p-4 text-sm text-amber-800">
-            No hay conexión a la base de datos todavía (
-            <code className="font-mono">DATABASE_URL</code>). Levanta Postgres
-            y corre <code className="font-mono">npm run db:seed</code> para
-            ver el catálogo real.
-          </div>
-        )}
-
-        {live && categories.every((c) => c.products.length === 0) && (
-          <div className="mt-6 rounded-2xl bg-white p-6 text-sm text-foreground/70 ring-1 ring-black/5">
-            Todavía no hay productos cargados. Corre{" "}
-            <code className="font-mono">npm run db:seed</code> para cargar el
-            catálogo de ejemplo.
-          </div>
-        )}
-
-        <div className="mt-10 space-y-14">
-          {categories
-            .filter((c) => c.products.length > 0)
-            .map((category) => (
-              <section key={category.id}>
-                <h2 className="text-xl font-bold text-brand-sage">
-                  {category.name}
-                </h2>
-                <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {category.products.map((product) => {
-                    const price = Number(product.dailyPrices[0]?.price ?? 0);
-                    return (
-                      <div
-                        key={product.id}
-                        className="flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5"
-                      >
-                        <div>
-                          <p className="font-semibold text-foreground">
-                            {product.name}
-                          </p>
-                          <p className="mt-1 text-2xl font-bold text-brand-tomato">
-                            S/ {price.toFixed(2)}
-                            <span className="ml-1 text-sm font-normal text-foreground/50">
-                              / {unitLabel[product.unit] ?? product.unit.toLowerCase()}
-                            </span>
-                          </p>
-                        </div>
-                        <div className="mt-4">
-                          <AddToCartButton
-                            productId={product.id}
-                            name={product.name}
-                            unit={product.unit}
-                            price={price}
-                            minOrderQty={Number(product.minOrderQty)}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-        </div>
+        <Suspense fallback={<CatalogSkeleton />}>
+          <CatalogContent />
+        </Suspense>
       </main>
 
       <footer className="border-t border-black/5 py-8">

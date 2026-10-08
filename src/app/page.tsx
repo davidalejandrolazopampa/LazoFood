@@ -9,6 +9,7 @@ type CatalogPreviewItem = {
   name: string;
   unit: string;
   price: number;
+  imageUrl: string | null;
 };
 
 const unitLabel: Record<string, string> = {
@@ -21,10 +22,10 @@ const unitLabel: Record<string, string> = {
 // Vista previa estática: se usa solo si todavía no hay una base de datos
 // conectada (DATABASE_URL), para que la landing no se caiga en desarrollo.
 const FALLBACK_PREVIEW: CatalogPreviewItem[] = [
-  { id: "p1", name: "Limón", unit: "KG", price: 3.5 },
-  { id: "p2", name: "Tomate", unit: "KG", price: 2.8 },
-  { id: "p3", name: "Palta Hass", unit: "KG", price: 6.0 },
-  { id: "p4", name: "Papa blanca", unit: "SACK", price: 45.0 },
+  { id: "p1", name: "Tomate", unit: "KG", price: 2.8, imageUrl: "/products/VER-001.svg" },
+  { id: "p2", name: "Limón", unit: "KG", price: 3.5, imageUrl: "/products/FRU-001.svg" },
+  { id: "p3", name: "Palta Hass", unit: "KG", price: 7.5, imageUrl: "/products/FRU-012.svg" },
+  { id: "p4", name: "Papa blanca", unit: "SACK", price: 45.0, imageUrl: "/products/TUB-001.svg" },
 ];
 
 async function getCatalogPreview(): Promise<{
@@ -54,6 +55,7 @@ async function getCatalogPreview(): Promise<{
         name: p.name,
         unit: p.unit,
         price: Number(p.dailyPrices[0]?.price ?? 0),
+        imageUrl: p.imageUrl,
       })),
       live: true,
     };
@@ -134,15 +136,28 @@ async function CatalogGrid() {
         {items.map((item) => (
           <div
             key={item.id}
-            className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5"
+            className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"
           >
-            <p className="font-semibold text-foreground">{item.name}</p>
-            <p className="mt-1 text-2xl font-bold text-brand-tomato">
-              S/ {item.price.toFixed(2)}
-              <span className="ml-1 text-sm font-normal text-foreground/50">
-                / {unitLabel[item.unit] ?? item.unit.toLowerCase()}
-              </span>
-            </p>
+            <div className="aspect-square w-full bg-[#f2efe4]">
+              {item.imageUrl && (
+                <Image
+                  src={item.imageUrl}
+                  alt={item.name}
+                  width={240}
+                  height={240}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+            <div className="p-5">
+              <p className="font-semibold text-foreground">{item.name}</p>
+              <p className="mt-1 text-2xl font-bold text-brand-tomato">
+                S/ {item.price.toFixed(2)}
+                <span className="ml-1 text-sm font-normal text-foreground/50">
+                  / {unitLabel[item.unit] ?? item.unit.toLowerCase()}
+                </span>
+              </p>
+            </div>
           </div>
         ))}
       </div>

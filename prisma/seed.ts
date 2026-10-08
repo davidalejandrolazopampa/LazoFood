@@ -1,58 +1,61 @@
 // Datos de ejemplo para desarrollo local.
 // Ejecutar con: npm run db:seed
 import { PrismaClient, UserRole, UnitOfMeasure } from "@prisma/client";
+import { PRODUCTS, type ProduceCategory } from "./data/products";
 
 const prisma = new PrismaClient();
 
+const CATEGORY_LABEL: Record<ProduceCategory, string> = {
+  verduras: "Verduras",
+  frutas: "Frutas",
+  tuberculos: "Tubérculos",
+};
+
 async function main() {
   // Categorías
-  const [verduras, frutas, tuberculos] = await Promise.all([
-    prisma.category.upsert({
-      where: { slug: "verduras" },
+  const categoryIds: Record<ProduceCategory, string> = {} as Record<ProduceCategory, string>;
+  for (const slug of Object.keys(CATEGORY_LABEL) as ProduceCategory[]) {
+    const category = await prisma.category.upsert({
+      where: { slug },
       update: {},
-      create: { name: "Verduras", slug: "verduras" },
-    }),
-    prisma.category.upsert({
-      where: { slug: "frutas" },
-      update: {},
-      create: { name: "Frutas", slug: "frutas" },
-    }),
-    prisma.category.upsert({
-      where: { slug: "tuberculos" },
-      update: {},
-      create: { name: "Tubérculos", slug: "tuberculos" },
-    }),
-  ]);
+      create: { name: CATEGORY_LABEL[slug], slug },
+    });
+    categoryIds[slug] = category.id;
+  }
 
-  // Productos + precio del día
-  const productsData = [
-    { sku: "VER-001", name: "Limón", categoryId: verduras.id, unit: UnitOfMeasure.KG, price: 3.5 },
-    { sku: "VER-002", name: "Tomate", categoryId: verduras.id, unit: UnitOfMeasure.KG, price: 2.8 },
-    { sku: "VER-003", name: "Cebolla roja", categoryId: verduras.id, unit: UnitOfMeasure.KG, price: 2.2 },
-    { sku: "FRU-001", name: "Palta Hass", categoryId: frutas.id, unit: UnitOfMeasure.KG, price: 6.0 },
-    { sku: "FRU-002", name: "Plátano de seda", categoryId: frutas.id, unit: UnitOfMeasure.KG, price: 2.5 },
-    { sku: "TUB-001", name: "Papa blanca", categoryId: tuberculos.id, unit: UnitOfMeasure.SACK, price: 45.0 },
-    { sku: "TUB-002", name: "Camote amarillo", categoryId: tuberculos.id, unit: UnitOfMeasure.KG, price: 1.8 },
-  ];
-
-  for (const p of productsData) {
+  // Catálogo completo (ver prisma/data/products.ts) + precio del día + imagen
+  for (const p of PRODUCTS) {
     const product = await prisma.product.upsert({
       where: { sku: p.sku },
-      update: {},
+      update: {
+        name: p.name,
+        categoryId: categoryIds[p.category],
+        unit: p.unit as UnitOfMeasure,
+        minOrderQty: p.minOrderQty ?? 1,
+        imageUrl: `/products/${p.sku}.svg`,
+      },
       create: {
         sku: p.sku,
         name: p.name,
-        categoryId: p.categoryId,
-        unit: p.unit,
+        categoryId: categoryIds[p.category],
+        unit: p.unit as UnitOfMeasure,
+        minOrderQty: p.minOrderQty ?? 1,
+        imageUrl: `/products/${p.sku}.svg`,
       },
     });
 
-    await prisma.dailyPrice.create({
-      data: {
-        productId: product.id,
-        price: p.price,
-      },
+    const hasPriceToday = await prisma.dailyPrice.findFirst({
+      where: { productId: product.id },
+      orderBy: { validFrom: "desc" },
     });
+    if (!hasPriceToday || Number(hasPriceToday.price) !== p.price) {
+      await prisma.dailyPrice.create({
+        data: {
+          productId: product.id,
+          price: p.price,
+        },
+      });
+    }
   }
 
   // Empresa cliente de ejemplo con lista de precios negociada y crédito
